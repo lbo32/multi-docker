@@ -1,0 +1,25 @@
+sudo: required
+language: generic
+
+services:
+  - docker
+
+before_install:
+  - docker build -t leo/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true leo/react-test npm test
+
+after_success:
+  - docker build -t leo/multi-client ./client
+  - docker build -t leo/multi-nginx ./nginx
+  - docker build -t leo/multi-server ./server
+  - docker build -t leo/multi-worker ./worker
+  # Log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take those images and push them to docker hub
+  - docker push leo/multi-client
+  - docker push leo/multi-nginx
+  - docker push leo/multi-server 
+  - docker push leo/multi-worker
+
